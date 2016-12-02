@@ -4,6 +4,7 @@ module Game (Player(Hannes, Jana)
     , player
     , throwIn
     , prettyPrint
+    , hasWon
     ) where
 
 import           Data.Matrix
