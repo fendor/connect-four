@@ -10,6 +10,7 @@ module Game (
 import           Control.Applicative (ZipList (..), getZipList)
 import           Data.Matrix
 import           Data.Maybe          (fromJust, isNothing)
+import           Data.Text           (pack, replace, unpack)
 import           Move
 import           Player
 import           Stone
@@ -70,9 +71,6 @@ newMove four p column = update (highest, column) >>= move'
       | otherwise = update (y-1, x)
 
 
-prettyPrint :: ConnectFour -> String
-prettyPrint = prettyMatrix . gamefield
-
 
 hasWon :: ConnectFour -> Maybe Player
 hasWon c
@@ -119,3 +117,7 @@ getAllCandidates pos =
     getVerticalCandidates pos
     ++ getHorizontalCandidates pos
     ++ getDiagonalNeighbours pos
+
+
+prettyPrint :: ConnectFour -> String
+prettyPrint = unpack . replace (pack "Empty") (pack "    -") . pack . prettyMatrix . gamefield

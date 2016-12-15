@@ -1,15 +1,14 @@
 module Main where
 
-import           Control.Monad
-import           Data.Maybe    (isJust)
+import           Data.Maybe (isJust)
 import           Game
-import           Move
+import           Move       (Move)
 import           Player
-import           Text.Read     (readMaybe)
+import           Text.Read  (readMaybe)
 
 main :: IO ()
 main = do
-  let game = newConnectFour 5 7
+  let game = newConnectFour 6 7
   turn game Hannes
   return ()
 
