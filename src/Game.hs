@@ -36,14 +36,19 @@ stoneToPlayer Yellow = Just Jana
 stoneToPlayer Empty = Nothing
 
 inBounds :: ConnectFour -> Pos -> Bool
-inBounds c (a, b) = (0 < a && a < x) && (0 < b && b < y)
+inBounds c (a, b) = (0 < a && a <= x) && (0 < b && b <= y)
   where
     g = gamefield c
     x = nrows g
     y = ncols g
 
 throwIn :: ConnectFour -> Move -> ConnectFour
-throwIn connect m = connect
+throwIn connect m = newConnect
+  where
+    s = stone m
+    pos = position m
+    newField = setElem s pos (gamefield connect)
+    newConnect = Four { gamefield = newField ,lastMove = Just m}
 
 newMove :: ConnectFour -> Player -> Column -> Maybe Move
 newMove four p column = update (highest, column) >>= move'
@@ -59,7 +64,7 @@ newMove four p column = update (highest, column) >>= move'
         }
 
     update :: Pos -> Maybe Pos
-    update pos@(x,y)
+    update pos@(y, x)
       | not $ inBounds four pos = Nothing
       | Empty == field ! pos = Just pos
       | otherwise = update (y-1, x)
