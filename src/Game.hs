@@ -81,7 +81,7 @@ hasWon c
         pos = position $ fromJust move
         p = stoneToPlayer (field ! pos)
         s = playerToStone $ fromJust p
-        candidates = getAllNeighbours pos
+        candidates = getAllCandidates pos
 
         hasSomeoneWon :: Bool
         hasSomeoneWon =
@@ -95,22 +95,22 @@ getDiagonalNeighbours (x,y) =
   ++ getZipList
     (zip <$> ZipList candidatesX <*> ZipList (reverse $ map reverse candidatesY))
   where
-    candidatesX = getDirectNeighbours 3 x
-    candidatesY = getDirectNeighbours 3 y
+    candidatesX = getDirectCandidates 3 x
+    candidatesY = getDirectCandidates 3 y
 
-getHorizontalNeighbours :: Pos -> [[Pos]]
-getHorizontalNeighbours (x, y) =
-    map (\coords -> zip coords (repeat y)) (getDirectNeighbours 3 x)
+getHorizontalCandidates :: Pos -> [[Pos]]
+getHorizontalCandidates (x, y) =
+    map (\coords -> zip coords (repeat y)) (getDirectCandidates 3 x)
 
-getVerticalNeighbours :: Pos -> [[Pos]]
-getVerticalNeighbours (x, y) =
-    map (zip (repeat x)) (getDirectNeighbours 3 y)
+getVerticalCandidates :: Pos -> [[Pos]]
+getVerticalCandidates (x, y) =
+    map (zip (repeat x)) (getDirectCandidates 3 y)
 
-getDirectNeighbours :: Int -> Int -> [[Int]]
-getDirectNeighbours interval n = [[a..a+interval] | a <- [n-interval..n]]
+getDirectCandidates :: Int -> Int -> [[Int]]
+getDirectCandidates interval n = [[a..a+interval] | a <- [n-interval..n]]
 
-getAllNeighbours :: Pos -> [[Pos]]
-getAllNeighbours pos =
-    getVerticalNeighbours pos
-    ++ getHorizontalNeighbours pos
+getAllCandidates :: Pos -> [[Pos]]
+getAllCandidates pos =
+    getVerticalCandidates pos
+    ++ getHorizontalCandidates pos
     ++ getDiagonalNeighbours pos
