@@ -8,16 +8,17 @@ import           Text.Read  (readMaybe)
 
 main :: IO ()
 main = do
-  let game = newConnectFour 6 7
+  let game = newGame (newConnectFour 6 7)
   turn game Hannes
   return ()
 
-turn :: ConnectFour -> Player -> IO ()
+turn :: Game -> Player -> IO ()
 turn gamefield player = do
     putStrLn $ prettyPrint gamefield
     putStrLn "Enter a number: "
-    maybeColumn <- fmap readMaybe getLine :: IO (Maybe Int)
-    let game = maybeColumn >>= newMove gamefield player >>= playTurn gamefield
+    line <- getLine
+
+    let game = parseInput line
 
     case game of
       Just g ->
@@ -30,9 +31,22 @@ turn gamefield player = do
 
     return ()
 
-playTurn :: ConnectFour -> Move -> Maybe ConnectFour
+    where
+      parseInput l = case l of
+        "u" -> undo gamefield
+        number -> readMaybe number >>= playMove gamefield player
+
+
+playTurn :: Game -> Move -> Maybe Game
 playTurn c m = Just (throwIn c m)
 
 otherPlayer :: Player -> Player
 otherPlayer Hannes = Jana
 otherPlayer Jana = Hannes
+
+undo :: Game -> Maybe Game
+undo = undoMove
+
+playMove :: Game -> Player -> Int ->  Maybe Game
+playMove g p num = newMove g p num >>= playTurn g
+

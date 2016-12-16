@@ -1,10 +1,13 @@
 module Game (
   newConnectFour
+  , newGame
   , ConnectFour
+  , Game
   , throwIn
   , newMove
   , prettyPrint
   , hasWon
+  , undoMove
 ) where
 
 import           Control.Applicative (ZipList (..), getZipList)
@@ -14,6 +17,11 @@ import           Data.Text           (pack, replace, unpack)
 import           Move
 import           Player
 import           Stone
+
+data Game = Game
+  { current :: ConnectFour
+  , history :: [ConnectFour]
+  }
 
 data ConnectFour = Four
   { gamefield :: Matrix Stone
@@ -26,6 +34,14 @@ newConnectFour rows columns =
       { gamefield = fromList rows columns (repeat Empty)
       , lastMove = Nothing
       }
+
+newGame :: ConnectFour -> Game
+newGame c = Game { current = c, history = [] }
+
+undoMove :: Game -> Maybe Game
+undoMove game
+  | null $ history game = Nothing
+  | otherwise = Just game { current = head $ history game, history = tail $ history game  }
 
 playerToStone :: Player -> Stone
 playerToStone Jana = Yellow -- important, famous, stubborn player
@@ -43,18 +59,25 @@ inBounds c (a, b) = (0 < a && a <= x) && (0 < b && b <= y)
     x = nrows g
     y = ncols g
 
-throwIn :: ConnectFour -> Move -> ConnectFour
+throwIn :: Game -> Move -> Game
 throwIn connect m = newConnect
   where
+    previousGame = current connect
     s = stone m
     pos = position m
-    newField = setElem s pos (gamefield connect)
-    newConnect = Four { gamefield = newField ,lastMove = Just m}
+    newField = setElem s pos (gamefield previousGame)
+    newConnect = connect
+      { current = previousGame
+          { gamefield = newField
+          , lastMove = Just m
+          }
+      , history =  previousGame : history connect
+      }
 
-newMove :: ConnectFour -> Player -> Column -> Maybe Move
-newMove four p column = update (highest, column) >>= move'
+newMove :: Game -> Player -> Column -> Maybe Move
+newMove game p column = update (highest, column) >>= move'
   where
-    field = gamefield four
+    field = gamefield $ current game
     highest = nrows field
 
     move' pos = Just
@@ -66,21 +89,22 @@ newMove four p column = update (highest, column) >>= move'
 
     update :: Pos -> Maybe Pos
     update pos@(y, x)
-      | not $ inBounds four pos = Nothing
+      | not $ inBounds (current game) pos = Nothing
       | Empty == field ! pos = Just pos
       | otherwise = update (y-1, x)
 
 
 
-hasWon :: ConnectFour -> Maybe Player
+hasWon :: Game -> Maybe Player
 hasWon c
     | isNothing move = Nothing
     | isNothing p = Nothing
     | hasSomeoneWon = p
     | otherwise = Nothing
     where
-        field = gamefield c
-        move = lastMove c
+        connect = current c
+        field = gamefield connect
+        move = lastMove connect
         pos = position $ fromJust move
         p = stoneToPlayer (field ! pos)
         s = playerToStone $ fromJust p
@@ -90,7 +114,7 @@ hasWon c
         hasSomeoneWon =
           any (all (==s))
           . map (map  (field !))
-          $ filter (all (inBounds c)) candidates
+          $ filter (all (inBounds connect)) candidates
 --
 getDiagonalNeighbours :: Pos -> [[Pos]]
 getDiagonalNeighbours (x,y) =
@@ -119,5 +143,5 @@ getAllCandidates pos =
     ++ getDiagonalNeighbours pos
 
 
-prettyPrint :: ConnectFour -> String
-prettyPrint = unpack . replace (pack "Empty") (pack "    -") . pack . prettyMatrix . gamefield
+prettyPrint :: Game -> String
+prettyPrint = unpack . replace (pack "Empty") (pack "    -") . pack . prettyMatrix . gamefield . current
